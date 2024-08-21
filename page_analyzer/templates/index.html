@@ -1,5 +1,7 @@
-{% extends "warp.html" %}
-
+{% extends "layout.html" %}
+{% block head %}
+  {{ super() }}
+{% endblock %}
 {% block content %}
 <main class="flex-grow-1">
     <div class="container-lg mt-3">
@@ -17,3 +19,4 @@
     </div>
   </main>
 {% endblock %}
+{block footer}{% endblock %}
