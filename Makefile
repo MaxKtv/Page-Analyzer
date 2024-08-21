@@ -1,19 +1,18 @@
 install:
 	poetry install
+
 dev:
 	poetry run flask --app page_analyzer:app run
 
-build:
+pbuild:
 	poetry build
+
+build:
+	./build.sh
 
 publish:
 	poetry publish --dry-run
 
-package-install:
-	python3 -m pip install --user dist/*.whl
-
-force-package-reinstall:
-	python3 -m pip install --user dist/*.whl --force-reinstall
 lint:
 	poetry run flake8 page_analyzer
 
