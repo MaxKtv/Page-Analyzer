@@ -1,0 +1,31 @@
+{% extends "layout.html" %}
+
+{% block head %}{{ super() }}{% endblock %}
+{% block content %}
+   <div class="container-lg mt-3">
+      <h1>Websites</h1>
+        <div class="table-responsive">
+          <table class="table table-bordered table-hover text-nowrap" data-test="urls">
+            <thead>
+            <tr>
+              <th>ID</th>
+              <th>Name</th>
+              <th>Last check</th>
+              <th>Response code</th>
+            </tr>
+            </thead>
+            <tbody>
+                {% for url in urls %}
+                    <tr>
+                        <td>{{ url.id }}</td>
+                        <td><a href="{{ url_for('specific_url', id=url.id) }}">{{ url.name }}</a></td>
+                        <td>date check</td>
+                        <td>404</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+          </table>
+        </div>
+    </div>
+{% endblock %}
+{% block footer %}{{ super() }}{% endblock %}
