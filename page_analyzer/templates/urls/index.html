@@ -1,36 +1,64 @@
 {% extends "layout.html" %}
 
-{% block head %}{{ super() }}{% endblock %}
-{% block content %}
+{% block head %}
+{{ super() }}
+{% endblock %}
 
+{% block content %}
 <div class="container-lg mt-3">
   <h1>Website: {{ url.name }}</h1>
-
 
 <div class="table-responsive">
   <table class="table table-bordered table-hover text-nowrap" data-test="urls">
     <thead>
-    <tr>
-      <td>ID</td>
-      <td>{{ url.id }}</td>
-    </tr>
-    <tr>
-      <td>Name</td>
-      <td>{{ url.name }}</td>
-    </tr>
-    <tr>
-      <td>Created at</td>
-      <td>{{ url.created_at }}</td>
-    </tr>
+      <tr>
+        <td>ID</td>
+        <td>{{ url.id }}</td>
+      </tr>
+      <tr>
+        <td>Name</td>
+        <td>{{ url.name }}</td>
+      </tr>
+      <tr>
+        <td>Created at</td>
+        <td>{{ url.created_at }}</td>
+      </tr>
     </thead>
-    <tbody>
-
-          <tr>
-          </tr>
-    </tbody>
   </table>
-</div>
 
+  <h2 class="mt-5 mb-3">Checks</h2>
+
+    <form method="POST" action="{{ url_for('add_check_url', url_id=url.id) }}">
+      <input type="submit" class="btn btn-primary" value="Initiate check" />
+    </form>
+    <table class="table table-bordered table-hover mt-2" data-test="checks">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Response code</th>
+          <th>h1</th>
+          <th>title</th>
+          <th>description</th>
+          <th>Created at</th>
+        </tr>
+      </thead>
+      <tbody>
+      {% for check in checks %}
+      <tr>
+        <td>{{ check.id }}</td>
+        <td>{{ check.status_code | default('', true) }}</td>
+        <td>{{ check.h1 | default('', true) }}</td>
+        <td>{{ check.title | default('', true) }}</td>
+        <td>{{ check.description | default('', true) }}</td>
+        <td>{{ check.created_at }}</td>
+      </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
 </div>
 {% endblock %}
-{% block footer %}{{ super() }}{% endblock %}
+
+{% block footer %}
+{{ super() }}
+{% endblock %}

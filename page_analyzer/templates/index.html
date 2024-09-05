@@ -1,18 +1,25 @@
 {% extends "layout.html" %}
-{% block head %}{{ super() }}{% endblock %}
-{% block content %}
-    <div class="container-lg mt-3">
-      <div class="row">
-        <div class="col-12 col-md-10 col-lg-8 mx-auto border rounded-3 bg-light p-5">
-          <h1 class="display-3">Page Analyzer</h1>
-          <p class="lead">Check websites for SEO-suitability</p>
-          <form action="{{ url_for('add_new_url') }}" method="post" class="d-flex justify-content-center">
-          <label for="text" class="visually-hidden">Url to check</label>
-          <input type="text" name="url" placeholder="https://www.example.com"value=""  class="form-control form-control-lg" required>
-          <input type="submit" class="btn btn-primary  btn-lg ms-3 px-5 text-uppercase mx-3" value="Check">
-          </form>
-        </div>
-      </div>
-    </div>
+
+{% block head %}
+{{ super() }}
 {% endblock %}
-{% block footer %}{{ super() }}{% endblock %}
+
+{% block content %}
+<div class="container-lg mt-3">
+  <div class="row">
+    <div class="col-12 col-md-10 col-lg-8 mx-auto border rounded-3 bg-light p-5">
+      <h1 class="display-3">Page Analyzer</h1>
+      <p class="lead">Check websites for SEO-suitability</p>
+      <form action="{{ url_for('add_new_url') }}" method="post" class="d-flex justify-content-center">
+      <label for="text" class="visually-hidden">Url to check</label>
+      <input type="text" name="url" placeholder="https://www.example.com" value="" class="form-control form-control-lg" required>
+      <input type="submit" class="btn btn-primary  btn-lg ms-3 px-5 text-uppercase mx-3" value="Check">
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block footer %}
+{{ super() }}
+{% endblock %}
