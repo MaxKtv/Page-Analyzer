@@ -39,7 +39,7 @@ def specific_url(url_id: int) -> str | Response:
     connection = connect_to_db()
     url, checks = fetch_url_by_id(url_id, connection)
     if not url:
-        flash('URL not found', 'danger')
+        flash('Сайт не найден', 'danger')
         return redirect(url_for('home'))
     return render_template('urls/index.html', url=url, checks=checks)
 
@@ -77,10 +77,10 @@ def add_new_url() -> Response | Tuple[str, int]:
             flash('Страница успешно добавлена', 'success')
             return redirect(url_for('specific_url', url_id=new_url_id))
 
-    except Exception as e:
+    except Exception:
         if connection:
             connection.rollback()
-        flash(f"An error occurred: {str(e)}", 'danger')
+        flash("An error occurred", 'danger')
         return redirect(url_for('home'))
 
     finally:
@@ -98,11 +98,11 @@ def add_check_url(url_id: int) -> Response:
         dict_url_data = dictionarize_soup_url(url)
         add_url_to_check(dict_url_data, url_id, connection)
         connection.commit()
-        flash('URL successfully added to check', 'success')
-    except Exception as e:
+        flash('Страница успешно проверена', 'success')
+    except Exception:
         if connection:
             connection.rollback()
-        flash(f"An error occurred: {str(e)}", 'danger')
+        flash("Произошла ошибка при проверке", 'danger')
     finally:
         if connection:
             connection.close()
