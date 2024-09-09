@@ -1,14 +1,7 @@
 from typing import Dict, Any
-from validators import url as url_validator
 from requests import get
 from bs4 import BeautifulSoup
 from requests.exceptions import RequestException
-
-
-def is_valid_url(url: str) -> bool | ValueError:
-    if not url_validator(url) and len(url) >= 255:
-        raise ValueError("Invalid URL")
-    return True
 
 
 def dictionarize_soup_url(url: str) -> Dict[str, Any]:

@@ -1,6 +1,8 @@
 from os import getenv
+from typing import Tuple
 from urllib.parse import urlparse, urlunparse
 from dotenv import load_dotenv
+from validators import url as url_validator
 from flask import (
     Flask,
     render_template,
@@ -10,7 +12,7 @@ from flask import (
     request,
     Response
 )
-from .tools import is_valid_url, dictionarize_soup_url
+from .tools import dictionarize_soup_url
 from .db import (
     connect_to_db,
     add_url,
@@ -50,12 +52,12 @@ def list_urls() -> str:
 
 
 @app.route('/urls', methods=['POST'])
-def add_new_url() -> Response:
+def add_new_url() -> Response | Tuple[str, int]:
     url = request.form['url']
 
-    if not is_valid_url(url):
+    if not url_validator(url) and not len(url) >= 255:
         flash('Invalid URL', 'danger')
-        return redirect(url_for('home'))
+        return render_template('index.html'), 422
 
     normalized_url = urlunparse(urlparse(url)[:2] + ('', '', '', ''))
 
