@@ -56,7 +56,7 @@ def add_new_url() -> Response | Tuple[str, int]:
     url = request.form['url']
 
     if not url_validator(url) and not len(url) >= 255:
-        flash('Invalid URL', 'danger')
+        flash('Некорректный URL', 'danger')
         return render_template('index.html'), 422
 
     normalized_url = urlunparse(urlparse(url)[:2] + ('', '', '', ''))
@@ -67,14 +67,14 @@ def add_new_url() -> Response | Tuple[str, int]:
         existing_url = url_exists(normalized_url, connection)
 
         if existing_url:
-            flash('URL already exists', 'success')
+            flash('Страница уже существует', 'success')
             return redirect(
                 url_for('specific_url', url_id=existing_url['id'])
             )
         else:
             new_url_id = add_url(normalized_url, connection)
             connection.commit()
-            flash('Page successfully added', 'success')
+            flash('Страница успешно добавлена', 'success')
             return redirect(url_for('specific_url', url_id=new_url_id))
 
     except Exception as e:
