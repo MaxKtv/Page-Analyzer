@@ -23,7 +23,8 @@ def dictionarize_soup_url(url: str) -> Dict[str, Any]:
     title = soup.title.get_text(strip=True) if soup.title else None
     h1 = soup.h1.get_text(strip=True) if soup.h1 else None
     meta_description_tag = soup.find('meta', {'name': 'description'})
-    description = meta_description_tag.get('content', '').strip() if meta_description_tag else None
+    description = meta_description_tag.get('content', '').strip() \
+        if meta_description_tag else None
 
     return {
         'status_code': req.status_code,
