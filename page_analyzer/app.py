@@ -1,5 +1,4 @@
 from os import getenv
-from typing import Tuple
 from urllib.parse import urlparse, urlunparse
 from dotenv import load_dotenv
 from flask import (
@@ -107,4 +106,3 @@ def add_check_url(url_id: int) -> Response:
             connection.close()
 
     return redirect(url_for('specific_url', url_id=url_id))
-
