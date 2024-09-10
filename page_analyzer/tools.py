@@ -6,7 +6,7 @@ from requests.exceptions import RequestException
 
 def dictionarize_soup_url(url: str) -> Dict[str, Any]:
     try:
-        req = get(url, timeout=10)
+        req = get(url, timeout=3000)
         req.raise_for_status()
     except RequestException as e:
         raise Exception(f"Error fetching the URL: {e}")
