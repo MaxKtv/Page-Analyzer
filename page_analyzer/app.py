@@ -110,8 +110,9 @@ def add_new_url() -> Response | Tuple[str, int]:
 
         if existing_url:
             flash('Страница уже существует', 'success')
+            existing_url_id = existing_url.get('id')
             return redirect(
-                url_for('specific_url', url_id=existing_url.get('id'))
+                url_for('specific_url', url_id=existing_url_id)
             )
         else:
             new_url_id = add_url(normalized_url, connection)
@@ -150,7 +151,7 @@ def add_check_url(url_id: int) -> Response:
     try:
         connection = connect_to_db()
         url_data, _ = fetch_url_by_id(url_id, connection)
-        url = url_data.get('url')
+        url = url_data.get('name')
         soup_url_data = dictionarize_soup_url(url)
         add_url_to_check(soup_url_data, url_id, connection)
         connection.commit()
