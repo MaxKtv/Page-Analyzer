@@ -1,7 +1,6 @@
 from datetime import datetime
 import os
 from typing import Tuple, List, Dict, Any
-
 from dotenv import load_dotenv
 from psycopg2 import extras, connect
 from psycopg2.extensions import connection
@@ -54,8 +53,8 @@ def add_url(url: str, conn: connection) -> int:
             'VALUES (%s, %s) RETURNING id;',
             (url, datetime.now())
         )
-        url_id = curs.fetchone()['id']
-    return url_id
+        result = curs.fetchone()
+    return result.get('id')
 
 
 def fetch_all_urls(conn: connection) -> List[Tuple[Any, ...]]:
@@ -100,7 +99,7 @@ def fetch_url_name_by_id(url_id: int, conn: connection) -> str | None:
             'SELECT name FROM urls WHERE id = %s;',
             (url_id,))
         result = curs.fetchone()
-    return result['name'] if result else None
+    return result.get('name')
 
 
 def fetch_url_by_id(url_id: int, conn: connection) \
@@ -120,10 +119,11 @@ def fetch_url_by_id(url_id: int, conn: connection) \
     with conn.cursor() as curs:
         curs.execute('SELECT * FROM urls WHERE id = %s;', (url_id,))
         url_data = curs.fetchone()
+        id, name, created_at = url_data
         url_dicted_data = {
-            'id': url_data[0],
-            'name': url_data[1],
-            'created_at': url_data[2]
+            'id': id,
+            'name':name,
+            'created_at': created_at
         }
 
         curs.execute('SELECT * FROM url_checks WHERE url_id = %s '
@@ -170,6 +170,12 @@ def add_url_to_check(data: Dict[str, Any], url_id: int, conn) -> None:
             'INSERT INTO url_checks '
             '(url_id, status_code, h1, title, description, created_at) '
             'VALUES (%s, %s, %s, %s, %s, %s);',
-            (url_id, data['status_code'], data['h1'],
-             data['title'], data['description'], datetime.now())
+            (
+                url_id,
+                data.get('status_code'),
+                data.get('h1'),
+                data.get('title'),
+                data.get('description'),
+                datetime.now()
+            )
         )
