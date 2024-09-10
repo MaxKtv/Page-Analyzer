@@ -122,7 +122,7 @@ def fetch_url_by_id(url_id: int, conn: connection) \
         id, name, created_at = url_data
         url_dicted_data = {
             'id': id,
-            'name':name,
+            'name': name,
             'created_at': created_at
         }
 
