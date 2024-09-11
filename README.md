@@ -23,14 +23,14 @@
 ***
 # Installation:
 
-### 1. First Way (pip)
+### 1.1. First Way (pip)
 
 - to install use:
 
 > `python3 -m pip install --user https://github.com/MaxKtv/python-project-83/archive/refs/heads/main.zip`
 
 
-### 1. Second Way (clone repo)
+### 1.2. Second Way (clone repo)
 
 - to clone repository - in any directory/folder use:
 
@@ -42,7 +42,7 @@
 >`SECRET_KEY=your_secret_key`
 >
 >`DATABASE_URL=postgresql:your_login_password_connection`
-* build
+- build
 >`make build`
-+ start your server!
+- start your server!
 >`make start`
