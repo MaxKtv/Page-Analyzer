@@ -2,7 +2,9 @@
 [![Actions Status](https://github.com/MaxKtv/python-project-83/actions/workflows/hexlet-check.yml/badge.svg)](https://github.com/MaxKtv/python-project-83/actions)
 [![Actions Status](https://github.com/MaxKtv/python-project-83/actions/workflows/pyci.yml/badge.svg)](https://github.com/MaxKtv/python-project-83/actions)
 [![Maintainability](https://api.codeclimate.com/v1/badges/c3b73db088733929feae/maintainability)](https://codeclimate.com/github/MaxKtv/python-project-83/maintainability)
+***
 ## Demo: https://python-project-83-jlm0.onrender.com
+***
 # System Requirements:
 
 #### 1. Python3
@@ -17,7 +19,7 @@
  
 #### 4. PostgreSQL
 > [PostgreSQL innstallation](https://skillbox.ru/media/ "Download PostgreSQL for your OS")
-
+***
 # Installation:
 
 ### First Way (pip)
