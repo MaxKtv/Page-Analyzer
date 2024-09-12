@@ -1,23 +1,22 @@
 from datetime import datetime
-import os
 from typing import Tuple, List, Dict, Any
 from dotenv import load_dotenv
-from psycopg2 import extras, connect
+from psycopg2 import extras, connect, OperationalError
 from psycopg2.extensions import connection
-
 
 load_dotenv()
 
-DATABASE_URL = os.getenv('DATABASE_URL')
 
-
-def connect_to_db() -> connection:
+def connect_to_db(conn: str | None) -> connection:
     """
     Establishes a connection to the database.
 
     Loads environment variables from the `.env` file,
     retrieves the database URL,
     and creates a connection to the database using psycopg2.
+
+    Args:
+        conn (str | None): The database URL.
 
     Returns:
         connection (connection): The database connection.
@@ -27,9 +26,9 @@ def connect_to_db() -> connection:
     """
 
     try:
-        return connect(DATABASE_URL, cursor_factory=extras.DictCursor)
-    except Exception as e:
-        raise ConnectionError(f'Could not connect to database: {e}')
+        return connect(conn, cursor_factory=extras.DictCursor)
+    except OperationalError as e:
+        raise OperationalError(f'Could not connect to database: {e}')
 
 
 def add_url(url: str, conn: connection) -> int:
@@ -119,9 +118,10 @@ def fetch_url_by_id(url_id: int, conn: connection) \
     with conn.cursor() as curs:
         curs.execute('SELECT * FROM urls WHERE id = %s;', (url_id,))
         url_data = curs.fetchone()
-        id, name, created_at = url_data
+
+        url_id, name, created_at = url_data
         url_dicted_data = {
-            'id': id,
+            'id': url_id,
             'name': name,
             'created_at': created_at
         }
@@ -165,6 +165,11 @@ def add_url_to_check(data: Dict[str, Any], url_id: int, conn) -> None:
         None
     """
 
+    status_code = data.get('status_code')
+    h1 = data.get('h1')
+    title = data.get('title')
+    description = data.get('description')
+
     with conn.cursor() as curs:
         curs.execute(
             'INSERT INTO url_checks '
@@ -172,10 +177,10 @@ def add_url_to_check(data: Dict[str, Any], url_id: int, conn) -> None:
             'VALUES (%s, %s, %s, %s, %s, %s);',
             (
                 url_id,
-                data.get('status_code'),
-                data.get('h1'),
-                data.get('title'),
-                data.get('description'),
+                status_code,
+                h1,
+                title,
+                description,
                 datetime.now()
             )
         )

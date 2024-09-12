@@ -1,8 +1,6 @@
 from os import getenv
 from typing import Tuple
-from urllib.parse import urlparse, urlunparse, ParseResult
 from dotenv import load_dotenv
-from validators import url as url_validator
 from flask import (
     Flask,
     render_template,
@@ -13,7 +11,8 @@ from flask import (
     Response,
     abort
 )
-from .tools import dictionarize_soup_url
+from psycopg2 import OperationalError
+
 from .db import (
     connect_to_db,
     add_url,
@@ -22,12 +21,13 @@ from .db import (
     url_exists,
     add_url_to_check
 )
-
+from .tools import dictionarize_soup_url, validate_url, normalize_url
 
 load_dotenv()
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = getenv('SECRET_KEY')
+DATABASE_URL = getenv('DATABASE_URL')
 
 
 @app.route('/')
@@ -55,11 +55,23 @@ def specific_url(url_id: int) -> str | Response:
         a flash message if the URL is not found.
     """
 
-    connection = connect_to_db()
-    url, checks = fetch_url_by_id(url_id, connection)
-    if not url:
-        abort(404, description="Сайт не найден")
-    return render_template('urls/index.html', url=url, checks=checks)
+    connection = connect_to_db(DATABASE_URL)
+
+    try:
+        url, checks = fetch_url_by_id(url_id, connection)
+
+        if not url:
+            abort(404, description="Сайт не найден")
+
+        result = render_template('urls/index.html', url=url, checks=checks)
+
+    except OperationalError | KeyError:
+        abort(500, description="Internal Server Error")
+
+    finally:
+        connection.close()
+
+    return result
 
 
 @app.route('/urls')
@@ -71,16 +83,26 @@ def list_urls() -> str:
         str: The rendered HTML content listing all URLs.
     """
 
-    connection = connect_to_db()
-    urls = fetch_all_urls(connection)
-    return render_template('urls/urls.html', urls=urls)
+    connection = connect_to_db(DATABASE_URL)
+
+    try:
+        urls = fetch_all_urls(connection)
+
+        result = render_template('urls/urls.html', urls=urls)
+
+    except OperationalError | KeyError:
+        abort(500, description="Internal Server Error")
+
+    finally:
+        connection.close()
+
+    return result
 
 
 @app.route('/urls', methods=['POST'])
 def add_new_url() -> Response | Tuple[str, int]:
     """
     Adds a new URL to the database via a form submission.
-
     Validates the URL format, checks if it already exists, and adds it if not.
 
     Returns:
@@ -89,46 +111,40 @@ def add_new_url() -> Response | Tuple[str, int]:
         a 422 status if the URL is invalid.
     """
 
-    url = request.form['url']
+    url = request.form.get('url')
 
-    if not url_validator(url) or len(url) >= 255:
+    if not validate_url(url):
         flash('Некорректный URL', 'danger')
         return render_template('index.html'), 422
 
-    parsed_url = urlparse(url)
-    normalized_url = urlunparse(ParseResult(scheme=parsed_url.scheme,
-                                            netloc=parsed_url.netloc,
-                                            path='',
-                                            params='',
-                                            query='',
-                                            fragment=''))
+    normalized_url = normalize_url(url)
+    connection = connect_to_db(DATABASE_URL)
 
-    connection = None
     try:
-        connection = connect_to_db()
         existing_url = url_exists(normalized_url, connection)
 
         if existing_url:
             flash('Страница уже существует', 'success')
             existing_url_id = existing_url.get('id')
-            return redirect(
+
+            result = redirect(
                 url_for('specific_url', url_id=existing_url_id)
             )
+
         else:
             new_url_id = add_url(normalized_url, connection)
             connection.commit()
             flash('Страница успешно добавлена', 'success')
-            return redirect(url_for('specific_url', url_id=new_url_id))
 
-    except Exception:
-        if connection:
-            connection.rollback()
-        flash("An error occurred", 'danger')
-        return redirect(url_for('home'))
+            result = redirect(url_for('specific_url', url_id=new_url_id))
+
+    except OperationalError | KeyError:
+        abort(500, description="Internal Server Error")
 
     finally:
-        if connection:
-            connection.close()
+        connection.close()
+
+    return result
 
 
 @app.route('/urls/<int:url_id>/check', methods=['POST'])
@@ -147,21 +163,19 @@ def add_check_url(url_id: int) -> Response:
         after the check is successfully added.
     """
 
-    connection = None
+    connection = connect_to_db(DATABASE_URL)
     try:
-        connection = connect_to_db()
         url_data, _ = fetch_url_by_id(url_id, connection)
         url = url_data.get('name')
         soup_url_data = dictionarize_soup_url(url)
         add_url_to_check(soup_url_data, url_id, connection)
         connection.commit()
         flash('Страница успешно проверена', 'success')
-    except Exception:
-        if connection:
-            connection.rollback()
-        flash("Произошла ошибка при проверке", 'danger')
+
+    except OperationalError | KeyError:
+        abort(500, description="Internal Server Error")
+
     finally:
-        if connection:
-            connection.close()
+        connection.close()
 
     return redirect(url_for('specific_url', url_id=url_id))
