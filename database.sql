@@ -10,7 +10,7 @@ CREATE TABLE IF NOT EXISTS urls (
 CREATE TABLE IF NOT EXISTS url_checks (
     id SERIAL PRIMARY KEY,
     url_id BIGINT NOT NULL REFERENCES urls(id) ON DELETE CASCADE,
-    status_code INTEGER,
+    status_code SMALLINT,
     h1 VARCHAR(255),
     title VARCHAR(255),
     description VARCHAR(255),
