@@ -11,8 +11,6 @@ from flask import (
     Response,
     abort
 )
-from psycopg2 import OperationalError
-
 from .db import (
     connect_to_db,
     add_url,
@@ -65,8 +63,9 @@ def specific_url(url_id: int) -> str | Response:
 
         result = render_template('urls/index.html', url=url, checks=checks)
 
-    except OperationalError | KeyError:
-        abort(500, description="Internal Server Error")
+    except (ConnectionError, KeyError):
+        flash('Internal Server Error', 'danger')
+        result = render_template('index.html'), 500
 
     finally:
         connection.close()
@@ -87,11 +86,11 @@ def list_urls() -> str:
 
     try:
         urls = fetch_all_urls(connection)
-
         result = render_template('urls/urls.html', urls=urls)
 
-    except OperationalError | KeyError:
-        abort(500, description="Internal Server Error")
+    except (ConnectionError, KeyError):
+        flash('Internal Server Error', 'danger')
+        result = render_template('index.html'), 500
 
     finally:
         connection.close()
@@ -138,8 +137,9 @@ def add_new_url() -> Response | Tuple[str, int]:
 
             result = redirect(url_for('specific_url', url_id=new_url_id))
 
-    except OperationalError | KeyError:
-        abort(500, description="Internal Server Error")
+    except (ConnectionError, KeyError):
+        flash('Internal Server Error', 'danger')
+        result = render_template('index.html'), 500
 
     finally:
         connection.close()
@@ -171,11 +171,19 @@ def add_check_url(url_id: int) -> Response:
         add_url_to_check(soup_url_data, url_id, connection)
         connection.commit()
         flash('Страница успешно проверена', 'success')
+        result = redirect(url_for('specific_url', url_id=url_id))
 
-    except OperationalError | KeyError:
-        abort(500, description="Internal Server Error")
+    except (ConnectionError, KeyError):
+        connection.rollback()
+        flash('Internal Server Error', 'danger')
+        result = render_template('index.html'), 500
+
+    except TimeoutError:
+        connection.rollback()
+        flash('Gateway Time Out', 'danger')
+        result = render_template('index.html'), 504
 
     finally:
         connection.close()
 
-    return redirect(url_for('specific_url', url_id=url_id))
+    return result
