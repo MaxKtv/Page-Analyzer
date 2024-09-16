@@ -7,6 +7,23 @@ from requests.exceptions import RequestException
 
 
 def dictionarize_soup_url(url: str) -> Dict[str, Any]:
+    """
+    Fetches the content from the provided URL and parses it to extract
+    the title, H1 tag, and meta description.
+
+    Args:
+        url (str): The URL of the web page to fetch and parse.
+
+    Returns:
+        Dict[str, Any]: A dictionary containing the HTTP
+                        status code, title, H1 tag, and meta description
+                        of the web page if its value is not None.
+
+    Raises:
+        TimeoutError: If there is an issue fetching the URL
+                      or if the request times out.
+    """
+
     try:
         req = get_request(url, timeout=10)
         req.raise_for_status()
@@ -34,6 +51,21 @@ def dictionarize_soup_url(url: str) -> Dict[str, Any]:
 
 
 def normalize_dict(dictionary: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Normalizes the provided dictionary by removing keys with None values
+    (excluding 'status_code') and truncating string values
+    to a maximum length of 255 characters.
+
+    Args:
+        dictionary (Dict[str, Any]): The dictionary to be normalized.
+
+    Returns:
+        Dict[str, Any]: The normalized dictionary.
+
+    Raises:
+        ValueError: If the 'status_code' key is None.
+    """
+
     key_to_del = []
 
     for key, val in dictionary.items():
@@ -53,10 +85,33 @@ def normalize_dict(dictionary: Dict[str, Any]) -> Dict[str, Any]:
 
 
 def validate_url(url: str) -> bool:
+    """
+    Validates if the provided URL is well-formed and has
+    a length of less than 255 characters.
+
+    Args:
+        url (str): The URL to be validated.
+
+    Returns:
+        bool: True if the URL is valid, otherwise False.
+    """
+
     return url_validator(url) and len(url) < 255
 
 
 def normalize_url(url: str) -> str:
+    """
+    Normalizes the provided URL by removing its
+    path, parameters, query, and fragment,
+    leaving only the scheme and netloc.
+
+    Args:
+        url (str): The URL to be normalized.
+
+    Returns:
+        str: The normalized URL with only the scheme and netloc.
+    """
+
     parsed_url = urlparse(url)
     normalized_url = urlunparse(ParseResult(scheme=parsed_url.scheme,
                                             netloc=parsed_url.netloc,
