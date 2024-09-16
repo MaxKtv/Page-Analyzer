@@ -178,9 +178,9 @@ def add_check_url(url_id: int) -> Response:
         flash('Internal Server Error', 'danger')
         result = render_template('index.html'), 500
 
-    except TimeoutError as e:
+    except TimeoutError:
         connection.rollback()
-        flash(f'Something went wrong: {e}', 'danger')
+        flash(f'Произошла ошибка при проверке', 'danger')
         result = render_template('index.html'), 504
 
     except ValueError as e:
