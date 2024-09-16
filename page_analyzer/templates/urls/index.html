@@ -43,7 +43,7 @@
         </tr>
       </thead>
       <tbody>
-      {% for check in checks %}
+      {% for check in checks|sort(attribute='id')|reverse %}
       <tr>
         <td>{{ check.id }}</td>
         <td>{{ check.status_code | default('', true) }}</td>
