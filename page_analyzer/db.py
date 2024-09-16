@@ -1,8 +1,9 @@
 from datetime import datetime
 from typing import Tuple, List, Dict, Any
 from dotenv import load_dotenv
-from psycopg2 import extras, connect, OperationalError
+from psycopg2 import extras, connect, OperationalError, DatabaseError
 from psycopg2.extensions import connection
+from psycopg2.extras import DictRow
 
 load_dotenv()
 
@@ -27,8 +28,8 @@ def connect_to_db(conn: str | None) -> connection:
 
     try:
         return connect(conn, cursor_factory=extras.DictCursor)
-    except OperationalError as e:
-        raise OperationalError(f'Could not connect to database: {e}')
+    except (DatabaseError, OperationalError) as e:
+        raise ConnectionError(f'Could not connect to database: {e}')
 
 
 def add_url(url: str, conn: connection) -> int:
@@ -56,29 +57,50 @@ def add_url(url: str, conn: connection) -> int:
     return result.get('id')
 
 
-def fetch_all_urls(conn: connection) -> List[Tuple[Any, ...]]:
+def fetch_all_urls(conn: connection) -> List[Dict[str, Any]]:
     """
     Retrieves a list of all URLs from the database
-    with associated check information.
+    along with the latest check information.
 
     Args:
         conn (connection): Active database connection.
 
     Returns:
-        List[Tuple[Any, ...]]: A list of URLs and their checks,
+        List[Dict[str, Any]]: A list of URLs and their most recent checks,
         ordered by creation date.
     """
 
     with conn.cursor() as curs:
         curs.execute(
-            'SELECT urls.id, urls.name, url_checks.created_at, '
-            'url_checks.status_code '
-            'FROM urls '
-            'LEFT JOIN url_checks ON urls.id = url_checks.url_id '
-            'ORDER BY urls.created_at DESC;'
+            'SELECT id, name FROM urls ORDER BY id DESC;'
         )
         urls = curs.fetchall()
-    return urls
+
+    result = []
+    for url in urls:
+        url_id = url['id']
+        name = url['name']
+
+        with conn.cursor() as curs:
+            curs.execute(
+                'SELECT created_at, status_code '
+                'FROM url_checks '
+                'WHERE url_id = %s '
+                'ORDER BY created_at DESC '
+                'LIMIT 1;',
+                (url_id,)
+            )
+
+            last_check = curs.fetchone()
+
+            result.append({
+                'id': url_id,
+                'name': name,
+                'last_check': last_check['created_at'] if last_check else None,
+                'status_code': last_check['status_code'] if last_check else None
+            })
+
+    return result
 
 
 def fetch_url_name_by_id(url_id: int, conn: connection) -> str | None:
@@ -97,8 +119,9 @@ def fetch_url_name_by_id(url_id: int, conn: connection) -> str | None:
         curs.execute(
             'SELECT name FROM urls WHERE id = %s;',
             (url_id,))
-        result = curs.fetchone()
-    return result.get('name')
+        data = curs.fetchone()
+        url_name = data.get('name')
+    return url_name
 
 
 def fetch_url_by_id(url_id: int, conn: connection) \
@@ -133,7 +156,7 @@ def fetch_url_by_id(url_id: int, conn: connection) \
     return url_dicted_data, checks
 
 
-def url_exists(url: str, conn: connection) -> Tuple | None:
+def url_exists(url: str, conn: connection) -> DictRow | None:
     """
     Checks if a URL already exists in the database.
 
@@ -164,23 +187,13 @@ def add_url_to_check(data: Dict[str, Any], url_id: int, conn) -> None:
     Returns:
         None
     """
+    data_insert_field = data.keys()
+    data_insert_values = data.values()
 
-    status_code = data.get('status_code')
-    h1 = data.get('h1')
-    title = data.get('title')
-    description = data.get('description')
+    insert_field = f"url_id, {', '.join(data_insert_field)}, created_at"
+    insert_values = url_id, *data_insert_values, datetime.now()
+    field_values = ', '.join(['%s'] * len(insert_values))
 
     with conn.cursor() as curs:
-        curs.execute(
-            'INSERT INTO url_checks '
-            '(url_id, status_code, h1, title, description, created_at) '
-            'VALUES (%s, %s, %s, %s, %s, %s);',
-            (
-                url_id,
-                status_code,
-                h1,
-                title,
-                description,
-                datetime.now()
-            )
-        )
+        curs.execute(f"INSERT INTO url_checks ({insert_field}) "
+                     f"VALUES ({field_values});", (insert_values))
