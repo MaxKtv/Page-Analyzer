@@ -196,4 +196,4 @@ def add_url_to_check(data: Dict[str, Any], url_id: int, conn) -> None:
 
     with conn.cursor() as curs:
         curs.execute(f"INSERT INTO url_checks ({insert_field}) "
-                     f"VALUES ({field_values});", (insert_values))
+                     f"VALUES ({field_values});", insert_values)
