@@ -8,10 +8,10 @@ from requests.exceptions import RequestException
 
 def dictionarize_soup_url(url: str) -> Dict[str, Any]:
     try:
-        req = get_request(url, timeout=3000)
+        req = get_request(url, timeout=10)
         req.raise_for_status()
     except RequestException as e:
-        raise RequestException(f"Error fetching the URL: {e}")
+        raise TimeoutError(f"Error fetching the URL: {e}")
 
     soup = BeautifulSoup(req.content, 'html.parser')
 
@@ -21,22 +21,35 @@ def dictionarize_soup_url(url: str) -> Dict[str, Any]:
     description = meta_description_tag.get('content', '').strip() \
         if meta_description_tag else None
 
-    result = {
+    raw_dict = {
         'status_code': req.status_code,
         'h1': h1,
         'title': title,
         'description': description,
     }
 
-    for value in result.values():
-        normalize_values(value)
+    normalized_dict = normalize_dict(raw_dict)
 
-    return result
+    return normalized_dict
 
 
-def normalize_values(val: Any) -> None:
-    if isinstance(val, str) and len(val) >= 255:
-        val = slice(0, 254)
+def normalize_dict(dictionary: Dict[str, Any]) -> Dict[str, Any]:
+    key_to_del = []
+
+    for key, val in dictionary.items():
+
+        if val is None:
+            if key == 'status_code':
+                raise ValueError("status code cannot be None")
+            key_to_del.append(key)
+
+        elif isinstance(val, str) and len(val) > 255:
+            dictionary[key] = val[:255]
+
+    for key in key_to_del:
+        del dictionary[key]
+
+    return dictionary
 
 
 def validate_url(url: str) -> bool:
