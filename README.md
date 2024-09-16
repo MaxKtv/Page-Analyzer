@@ -3,7 +3,10 @@
 [![Actions Status](https://github.com/MaxKtv/python-project-83/actions/workflows/pyci.yml/badge.svg)](https://github.com/MaxKtv/python-project-83/actions)
 [![Maintainability](https://api.codeclimate.com/v1/badges/c3b73db088733929feae/maintainability)](https://codeclimate.com/github/MaxKtv/python-project-83/maintainability)
 ***
-## Demo: 
+# Page Analyzer
+## Website (Flask web-app) that analyzes the specified pages for SEO suitability
+***
+## Page Analyzer Demo:
 > ### *https://python-project-83-jlm0.onrender.com*
 ***
 # System Requirements:
