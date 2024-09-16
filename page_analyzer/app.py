@@ -178,10 +178,15 @@ def add_check_url(url_id: int) -> Response:
         flash('Internal Server Error', 'danger')
         result = render_template('index.html'), 500
 
-    except TimeoutError:
+    except TimeoutError as e:
         connection.rollback()
-        flash('Gateway Time Out', 'danger')
+        flash(f'Something went wrong: {e}', 'danger')
         result = render_template('index.html'), 504
+
+    except ValueError as e:
+        connection.rollback()
+        flash(f'Something went wrong: {e}', 'danger')
+        result = render_template('index.html'), 500
 
     finally:
         connection.close()
