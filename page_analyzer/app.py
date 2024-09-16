@@ -171,24 +171,20 @@ def add_check_url(url_id: int) -> Response:
         add_url_to_check(soup_url_data, url_id, connection)
         connection.commit()
         flash('Страница успешно проверена', 'success')
-        result = redirect(url_for('specific_url', url_id=url_id))
 
     except (ConnectionError, KeyError):
         connection.rollback()
         flash('Internal Server Error', 'danger')
-        result = render_template('index.html'), 500
 
     except TimeoutError:
         connection.rollback()
-        flash(f'Произошла ошибка при проверке', 'danger')
-        result = render_template('index.html'), 504
+        flash('Произошла ошибка при проверке', 'danger')
 
     except ValueError as e:
         connection.rollback()
         flash(f'Something went wrong: {e}', 'danger')
-        result = render_template('index.html'), 500
 
     finally:
         connection.close()
 
-    return result
+    return redirect(url_for('specific_url', url_id=url_id))
