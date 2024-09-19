@@ -5,13 +5,13 @@ from urllib.parse import urlparse, urlunparse, ParseResult
 from bs4 import BeautifulSoup
 
 
-def dictionarize_soup_url(req: Response) -> Dict[str, Any]:
+def dictionarize_soup_url(response: Response) -> Dict[str, Any]:
     """
     Fetches the content from the provided URL and parses it to extract
     the title, H1 tag, and meta description.
 
     Args:
-        req (Response): The HTTP response from the web page.
+        response (Response): The HTTP response from the web page.
 
     Returns:
         Dict[str, Any]: A dictionary containing the HTTP
@@ -19,7 +19,7 @@ def dictionarize_soup_url(req: Response) -> Dict[str, Any]:
                         of the web page if its value is not None.
     """
 
-    soup = BeautifulSoup(req.content, 'html.parser')
+    soup = BeautifulSoup(response.content, 'html.parser')
 
     title = soup.title.get_text(strip=True) if soup.title else None
     h1 = soup.h1.get_text(strip=True) if soup.h1 else None
@@ -28,7 +28,7 @@ def dictionarize_soup_url(req: Response) -> Dict[str, Any]:
         if meta_description_tag else None
 
     raw_dict = {
-        'status_code': req.status_code,
+        'status_code': response.status_code,
         'h1': h1,
         'title': title,
         'description': description,
@@ -59,8 +59,6 @@ def normalize_dict(dictionary: Dict[str, Any]) -> Dict[str, Any]:
 
     for key, val in dictionary.items():
         if val is None:
-            if key == 'status_code':
-                raise ValueError("status code cannot be None")
             continue
         elif isinstance(val, str):
             val = val[:255]

@@ -171,9 +171,9 @@ def add_check_url(url_id: int) -> Response:
         url_data, _ = fetch_url_by_id(url_id, connection)
         url = url_data.get('name')
 
-        req = get_request(url, timeout=10)
-        req.raise_for_status()
-        soup_url_data = dictionarize_soup_url(req)
+        req_response = get_request(url, timeout=10)
+        req_response.raise_for_status()
+        soup_url_data = dictionarize_soup_url(req_response)
 
         add_url_to_check(soup_url_data, url_id, connection)
         connection.commit()
@@ -186,10 +186,6 @@ def add_check_url(url_id: int) -> Response:
     except RequestException:
         connection.rollback()
         flash('Произошла ошибка при проверке', 'danger')
-
-    except ValueError as e:
-        connection.rollback()
-        flash(f'Something went wrong: {e}', 'danger')
 
     finally:
         connection.close()
