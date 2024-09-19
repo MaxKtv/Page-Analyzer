@@ -1,11 +1,8 @@
 from datetime import datetime
 from typing import Tuple, List, Dict, Any
-from dotenv import load_dotenv
-from psycopg2 import extras, connect, OperationalError, DatabaseError
+from psycopg2 import extras, connect, OperationalError, DatabaseError, sql
 from psycopg2.extensions import connection
 from psycopg2.extras import DictRow
-
-load_dotenv()
 
 
 def connect_to_db(conn: str | None) -> connection:
@@ -187,13 +184,13 @@ def add_url_to_check(data: Dict[str, Any], url_id: int, conn) -> None:
     Returns:
         None
     """
-    data_insert_field = data.keys()
-    data_insert_values = data.values()
 
-    insert_field = f"url_id, {', '.join(data_insert_field)}, created_at"
-    insert_values = url_id, *data_insert_values, datetime.now()
-    field_values = ', '.join(['%s'] * len(insert_values))
+    insert_fields = ['url_id'] + list(data.keys()) + ['created_at']
+    insert_values = [url_id] + list(data.values()) + [datetime.now()]
+
+    query = sql.SQL("INSERT INTO url_checks ({}) VALUES ({})").format(
+        sql.SQL(', ').join(map(sql.Identifier, insert_fields)),
+        sql.SQL(', ').join(sql.Placeholder() * len(insert_fields)))
 
     with conn.cursor() as curs:
-        curs.execute(f"INSERT INTO url_checks ({insert_field}) "
-                     f"VALUES ({field_values});", insert_values)
+        curs.execute(query, insert_values)
