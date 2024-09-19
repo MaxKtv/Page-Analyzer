@@ -1,6 +1,8 @@
 from os import getenv
 from typing import Tuple
 from dotenv import load_dotenv
+from requests import get as get_request
+from requests.exceptions import RequestException
 from flask import (
     Flask,
     render_template,
@@ -19,7 +21,8 @@ from .db import (
     url_exists,
     add_url_to_check
 )
-from .tools import dictionarize_soup_url, validate_url, normalize_url
+from .tools import dictionarize_soup_url, is_valid_url, normalize_url
+
 
 load_dotenv()
 
@@ -112,7 +115,7 @@ def add_new_url() -> Response | Tuple[str, int]:
 
     url = request.form.get('url')
 
-    if not validate_url(url):
+    if not is_valid_url(url):
         flash('Некорректный URL', 'danger')
         return render_template('index.html'), 422
 
@@ -167,7 +170,11 @@ def add_check_url(url_id: int) -> Response:
     try:
         url_data, _ = fetch_url_by_id(url_id, connection)
         url = url_data.get('name')
-        soup_url_data = dictionarize_soup_url(url)
+
+        req = get_request(url, timeout=10)
+        req.raise_for_status()
+        soup_url_data = dictionarize_soup_url(req)
+
         add_url_to_check(soup_url_data, url_id, connection)
         connection.commit()
         flash('Страница успешно проверена', 'success')
@@ -176,7 +183,7 @@ def add_check_url(url_id: int) -> Response:
         connection.rollback()
         flash('Internal Server Error', 'danger')
 
-    except TimeoutError:
+    except RequestException:
         connection.rollback()
         flash('Произошла ошибка при проверке', 'danger')
 

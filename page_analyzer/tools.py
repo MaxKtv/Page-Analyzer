@@ -1,18 +1,17 @@
 from typing import Dict, Any
-from requests import get as get_request
+from requests import Response
 from validators import url as url_validator
 from urllib.parse import urlparse, urlunparse, ParseResult
 from bs4 import BeautifulSoup
-from requests.exceptions import RequestException
 
 
-def dictionarize_soup_url(url: str) -> Dict[str, Any]:
+def dictionarize_soup_url(req: Response) -> Dict[str, Any]:
     """
     Fetches the content from the provided URL and parses it to extract
     the title, H1 tag, and meta description.
 
     Args:
-        url (str): The URL of the web page to fetch and parse.
+        req (Response): The HTTP response from the web page.
 
     Returns:
         Dict[str, Any]: A dictionary containing the HTTP
@@ -23,12 +22,6 @@ def dictionarize_soup_url(url: str) -> Dict[str, Any]:
         TimeoutError: If there is an issue fetching the URL
                       or if the request times out.
     """
-
-    try:
-        req = get_request(url, timeout=10)
-        req.raise_for_status()
-    except RequestException as e:
-        raise TimeoutError(f"Error fetching the URL: {e}")
 
     soup = BeautifulSoup(req.content, 'html.parser')
 
@@ -66,25 +59,22 @@ def normalize_dict(dictionary: Dict[str, Any]) -> Dict[str, Any]:
         ValueError: If the 'status_code' key is None.
     """
 
-    key_to_del = []
+    normalized_dict = {}
 
     for key, val in dictionary.items():
-
         if val is None:
-            if key == 'status_code':
+            if key =='status_code':
                 raise ValueError("status code cannot be None")
-            key_to_del.append(key)
+            continue
+        elif isinstance(val, str):
+            val = val[:255]
 
-        elif isinstance(val, str) and len(val) > 255:
-            dictionary[key] = val[:255]
+        normalized_dict[key] = val
 
-    for key in key_to_del:
-        del dictionary[key]
-
-    return dictionary
+    return normalized_dict
 
 
-def validate_url(url: str) -> bool:
+def is_valid_url(url: str) -> bool:
     """
     Validates if the provided URL is well-formed and has
     a length of less than 255 characters.
