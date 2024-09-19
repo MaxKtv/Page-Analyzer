@@ -59,7 +59,7 @@ def normalize_dict(dictionary: Dict[str, Any]) -> Dict[str, Any]:
 
     for key, val in dictionary.items():
         if val is None:
-            if key =='status_code':
+            if key == 'status_code':
                 raise ValueError("status code cannot be None")
             continue
         elif isinstance(val, str):
