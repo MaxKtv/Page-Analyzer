@@ -17,10 +17,6 @@ def dictionarize_soup_url(req: Response) -> Dict[str, Any]:
         Dict[str, Any]: A dictionary containing the HTTP
                         status code, title, H1 tag, and meta description
                         of the web page if its value is not None.
-
-    Raises:
-        TimeoutError: If there is an issue fetching the URL
-                      or if the request times out.
     """
 
     soup = BeautifulSoup(req.content, 'html.parser')
